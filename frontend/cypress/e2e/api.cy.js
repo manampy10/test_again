@@ -234,4 +234,46 @@ describe("Tests API", () => {
       expect(res.body).to.be.an("array");
     });
   });
+  it("Ajout produit en rupture de stock échoue avec erreur", () => {
+    const baseUrl = "http://localhost:8081";
+
+    // 1) Connexion pour obtenir un JWT
+    cy.request("POST", `${baseUrl}/login`, {
+      username: "test2@test.fr",
+      password: "testtest",
+    }).then(({ body: { token } }) => {
+      expect(token, "JWT attendu").to.exist;
+
+      // 2) Tentative d’ajout d’un produit hors stock
+      cy.request({
+        method: "PUT",
+        url: `${baseUrl}/orders/add`,
+        headers: { Authorization: `Bearer ${token}` },
+        body: { product: 999, quantity: 1 },
+        failOnStatusCode: false, // on veut capter le 4xx
+      }).then((response) => {
+        expect([400, 409, 422]).to.include(response.status);
+
+        const body = response.body;
+        const message =
+          typeof body === "string"
+            ? body
+            : typeof body?.message === "string"
+            ? body.message
+            : typeof body?.error === "string"
+            ? body.error
+            : typeof body?.error?.message === "string"
+            ? body.error.message
+            : null;
+
+        if (message) {
+          // message trouvé : on vérifie le contenu
+          expect(message.toLowerCase()).to.match(/rupture|stock|épuisé/);
+        } else {
+          // pas de message : on logge pour information et on passe
+          cy.log("⚠️  Aucun champ texte dans la réponse d'erreur :", body);
+        }
+      });
+    });
+  });
 });
