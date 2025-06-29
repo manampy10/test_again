@@ -8,8 +8,11 @@
 
 # Node
 /node_modules
+mysql/
+**/mysql/
 npm-debug.log
 yarn-error.log
+cypress/screenshots/
 
 # IDEs and editors
 .idea/
