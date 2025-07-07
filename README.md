@@ -34,6 +34,12 @@ Pour démarrer l'API avec ça base de données.
 docker compose up -d
 ```
 
+Pour stopper l'API avec ça base de données.
+
+```
+docker compose down
+```
+
 # Pour démarrer le frontend de l'applicatif
 
 Rendez-vous dans le dossier frontend

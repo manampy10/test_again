@@ -16,9 +16,11 @@ describe("Panier – scénarios essentiels", () => {
   };
 
   const addToCartAndOpenCart = () => {
+    //Cible le bouton “Ajouter au panier”
     cy.get('[data-cy="detail-product-add"]').click();
     cy.intercept("GET", "**/orders").as("orders");
     cy.contains("Mon panier").click();
+    //Attend que l’appel réseau GET /orders soit terminé.
     cy.wait("@orders");
     cy.location("hash").should("include", "/cart");
   };
@@ -38,7 +40,9 @@ describe("Panier – scénarios essentiels", () => {
   /* ---------------- Test 1 : présence d’une ligne ---------------- */
   it("affiche la ligne ajoutée dans le panier", () => {
     addToCartAndOpenCart();
+    //Je récupère l’élément qui représente une ligne du panier, en lui laissant jusqu’à 10 secondes pour apparaître. »
     cy.get('[data-cy="cart-line"]', { timeout: 10_000 })
+      //’élément est bien présent dans le DOM.
       .should("exist")
       .and("be.visible");
   });
@@ -46,7 +50,7 @@ describe("Panier – scénarios essentiels", () => {
   /* ---------------- Test 2 : totaux ligne × ligne ---------------- */
   it("calcule correctement les totaux de chaque ligne", () => {
     addToCartAndOpenCart();
-
+    // On traite chaque ligne une par une
     cy.get('[data-cy="cart-line"]', { timeout: 10_000 }).each(($line) => {
       cy.wrap($line).within(() => {
         cy.get('[data-cy="cart-line-quantity"]')

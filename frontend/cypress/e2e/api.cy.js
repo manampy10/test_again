@@ -271,7 +271,7 @@ describe("Tests API", () => {
           expect(message.toLowerCase()).to.match(/rupture|stock|épuisé/);
         } else {
           // pas de message : on logge pour information et on passe
-          cy.log("⚠️  Aucun champ texte dans la réponse d'erreur :", body);
+          cy.log("  Aucun champ texte dans la réponse d'erreur :", body);
         }
       });
     });
