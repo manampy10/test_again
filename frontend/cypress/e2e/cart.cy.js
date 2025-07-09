@@ -15,17 +15,17 @@ describe("Panier – scénarios essentiels", () => {
   };
 
   const addToCartAndOpenCart = () => {
-    //Cible le bouton “Ajouter au panier”
     cy.get('[data-cy="detail-product-add"]').click();
     cy.intercept("GET", "**/orders").as("orders");
     cy.contains("Mon panier").click();
-    //Attend que l’appel réseau GET /orders soit terminé.
     cy.wait("@orders");
     cy.location("hash").should("include", "/cart");
   };
 
   const fillAddress = () => {
-    cy.get('[data-cy="cart-input-address"]').type("123 rue des tests");
+    cy.get('[data-cy="cart-input-address"]', { timeout: 10_000 }).type(
+      "123 rue des tests"
+    );
     cy.get('[data-cy="cart-input-zipcode"]').type("75001");
     cy.get('[data-cy="cart-input-city"]').type("Paris");
   };
@@ -37,16 +37,13 @@ describe("Panier – scénarios essentiels", () => {
 
   it("affiche la ligne ajoutée dans le panier", () => {
     addToCartAndOpenCart();
-    //Je récupère l’élément qui représente une ligne du panier, en lui laissant jusqu’à 10 secondes pour apparaître. »
     cy.get('[data-cy="cart-line"]', { timeout: 10_000 })
-      //’élément est bien présent dans le DOM.
       .should("exist")
       .and("be.visible");
   });
 
   it("calcule correctement les totaux de chaque ligne", () => {
     addToCartAndOpenCart();
-    // On traite chaque ligne une par une
     cy.get('[data-cy="cart-line"]', { timeout: 10_000 }).each(($line) => {
       cy.wrap($line).within(() => {
         cy.get('[data-cy="cart-line-quantity"]')
@@ -66,13 +63,19 @@ describe("Panier – scénarios essentiels", () => {
     });
   });
 
-  // stock doit être supérieur à 1 pour pouvoir être ajouté.
-  
   it("valide la commande avec succès", () => {
     addToCartAndOpenCart();
     fillAddress();
     cy.get('[data-cy="cart-submit"]').click();
     cy.contains("h1", "Merci !").should("exist");
     cy.contains("Votre commande est bien validée").should("exist");
+  });
+
+  it("affiche le champ de disponibilité ou le stock chiffré", () => {
+    cy.get('[data-cy="detail-product-stock"]')
+      .invoke("text")
+      .should((txt) => {
+        expect(txt.trim()).to.match(/Disponible|\d+\s*en stock/i);
+      });
   });
 });
