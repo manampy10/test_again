@@ -1,6 +1,5 @@
 // cypress/e2e/cart.cy.js
 describe("Panier – scénarios essentiels", () => {
-  /* ---------------- Helpers réutilisables ---------------- */
   const login = () => {
     cy.visit("/#/login");
     cy.get('[data-cy="login-input-username"]').type("test2@test.fr");
@@ -31,13 +30,11 @@ describe("Panier – scénarios essentiels", () => {
     cy.get('[data-cy="cart-input-city"]').type("Paris");
   };
 
-  /* ---------------- Pré-condition commune ---------------- */
   beforeEach(() => {
     login();
     openFirstProduct();
   });
 
-  /* ---------------- Test 1 : présence d’une ligne ---------------- */
   it("affiche la ligne ajoutée dans le panier", () => {
     addToCartAndOpenCart();
     //Je récupère l’élément qui représente une ligne du panier, en lui laissant jusqu’à 10 secondes pour apparaître. »
@@ -47,7 +44,6 @@ describe("Panier – scénarios essentiels", () => {
       .and("be.visible");
   });
 
-  /* ---------------- Test 2 : totaux ligne × ligne ---------------- */
   it("calcule correctement les totaux de chaque ligne", () => {
     addToCartAndOpenCart();
     // On traite chaque ligne une par une
@@ -70,7 +66,8 @@ describe("Panier – scénarios essentiels", () => {
     });
   });
 
-  /* ---------------- Test 3 : validation de la commande ---------------- */
+  // stock doit être supérieur à 1 pour pouvoir être ajouté.
+  
   it("valide la commande avec succès", () => {
     addToCartAndOpenCart();
     fillAddress();
