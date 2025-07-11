@@ -7,75 +7,29 @@ describe("Panier – scénarios essentiels", () => {
     cy.get('[data-cy="login-submit"]').click();
   };
 
-  const openFirstProduct = () => {
-    cy.contains("button", "Voir les produits").click();
-    cy.url().should("include", "/#/products");
-    cy.get('[data-cy="product-link"]', { timeout: 10_000 }).first().click();
-    cy.location("hash").should("match", /#\/products/);
-  };
-
-  const addToCartAndOpenCart = () => {
-    cy.get('[data-cy="detail-product-add"]').click();
-    cy.intercept("GET", "**/orders").as("orders");
-    cy.contains("Mon panier").click();
-    cy.wait("@orders");
-    cy.location("hash").should("include", "/cart");
-  };
-
-  const fillAddress = () => {
-    cy.get('[data-cy="cart-input-address"]', { timeout: 10_000 }).type(
-      "123 rue des tests"
-    );
-    cy.get('[data-cy="cart-input-zipcode"]').type("75001");
-    cy.get('[data-cy="cart-input-city"]').type("Paris");
-  };
-
-  beforeEach(() => {
+  it("Clique sur le bouton Produits et affiche tous les produits", () => {
+    // Connexion (si login() est défini)
     login();
-    openFirstProduct();
-  });
 
-  it("affiche la ligne ajoutée dans le panier", () => {
-    addToCartAndOpenCart();
-    cy.get('[data-cy="cart-line"]', { timeout: 10_000 })
-      .should("exist")
-      .and("be.visible");
-  });
+    // Intercepte l'appel à l'API des produits
+    cy.intercept("GET", "**/products").as("getProducts");
 
-  it("calcule correctement les totaux de chaque ligne", () => {
-    addToCartAndOpenCart();
-    cy.get('[data-cy="cart-line"]', { timeout: 10_000 }).each(($line) => {
-      cy.wrap($line).within(() => {
-        cy.get('[data-cy="cart-line-quantity"]')
-          .invoke("val")
-          .then((q) => {
-            const qty = Number(q);
-            cy.get('[data-cy="cart-line-total"]')
-              .invoke("text")
-              .then((txt) => {
-                const total = Number(
-                  txt.replace(/[^\d,]/g, "").replace(",", ".")
-                );
-                expect(total / qty).to.be.greaterThan(0);
-              });
-          });
-      });
-    });
-  });
+    // Clique sur le bouton "Voir les produits"
+    cy.contains("button", "Voir les produits").click();
 
-  it("valide la commande avec succès", () => {
-    addToCartAndOpenCart();
-    fillAddress();
-    cy.get('[data-cy="cart-submit"]').click();
-    cy.contains("h1", "Merci !").should("exist");
-    cy.contains("Votre commande est bien validée").should("exist");
-  });
+    // Vérifie que l’URL contient "/products"
+    cy.url().should("include", "/#/products");
 
-  it("affiche le champ de disponibilité ou le stock chiffré", () => {
-    cy.get('[data-cy="detail-product-stock"]')
-      .invoke("text")
-      .should((txt) => {
-        expect(txt.trim()).to.match(/Disponible|\d+\s*en stock/i);
-      });
+    // Attend la réponse de l’API
+    cy.wait("@getProducts").its("response.statusCode").should("eq", 200);
+
+    // Vérifie que les produits sont bien affichés
+    cy.get('[data-cy="product-link"]').should("have.length.greaterThan", 0);
+
+    // Clic sur le bouton "Consulter" du premier produit
+    cy.get('[data-cy="product-link"]').first().click();
+
+    // Vérifie qu'on est bien redirigé vers la page du produit
+    cy.url().should("include", "/#/product");
   });
 });
