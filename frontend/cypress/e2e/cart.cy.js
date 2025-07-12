@@ -43,5 +43,38 @@ describe("Panier – scénarios essentiels", () => {
     cy.get('[data-cy="detail-product-form"]').should("exist");
   });
 
- 
+  it("accès aux produits depuis la page d'accueil et navigation vers le détail", () => {
+    // Connexion utilisateur
+    login();
+
+    // Interception de l'API produits
+    cy.intercept("GET", "**/products").as("getProducts");
+
+    // Page d'accueil → clic bouton produits
+    cy.url().should("include", "/#/");
+    cy.contains("button", "Voir les produits").should("be.visible").click();
+    cy.url().should("include", "/#/products");
+
+    // Attente des données produits
+    cy.wait("@getProducts").its("response.statusCode").should("eq", 200);
+    cy.get('[data-cy="product-link"]').should("have.length.greaterThan", 0);
+
+    // Détail produit
+    cy.get('[data-cy="product-link"]').first().click();
+    cy.url().should("match", /\/#\/products\/\d+/);
+    cy.get('[data-cy="detail-product-name"]').should("be.visible");
+    cy.get('[data-cy="detail-product-img"]').should("be.visible");
+    cy.get('[data-cy="detail-product-form"]').should("exist");
+
+    const inputSelector = '[data-cy="detail-product-quantity"]';
+    const buttonSelector = '[data-cy="detail-product-add"]';
+
+    // ➤ Cas invalide : -1 → bouton désactivé
+    cy.get(inputSelector).clear().type("-1").blur();
+    cy.get(buttonSelector).should("be.disabled");
+
+    // ➤ Cas valide : 1 → bouton activé
+    cy.get(inputSelector).clear().type("1").blur();
+    cy.get(buttonSelector).should("not.be.disabled");
+  });
 });
