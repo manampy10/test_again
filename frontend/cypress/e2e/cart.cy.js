@@ -7,29 +7,41 @@ describe("Panier – scénarios essentiels", () => {
     cy.get('[data-cy="login-submit"]').click();
   };
 
-  it("Clique sur le bouton Produits et affiche tous les produits", () => {
-    // Connexion (si login() est défini)
+  it("accès aux produits depuis la page d'accueil et navigation vers le détail", () => {
+    // 1. Connexion utilisateur (si nécessaire)
     login();
 
-    // Intercepte l'appel à l'API des produits
+    // 2. Intercepter l'appel à l'API produits
     cy.intercept("GET", "**/products").as("getProducts");
 
-    // Clique sur le bouton "Voir les produits"
-    cy.contains("button", "Voir les produits").click();
+    // 3. Je suis sur la page d’accueil
+    cy.url().should("include", "/#/");
 
-    // Vérifie que l’URL contient "/products"
+    // 4. Je clique sur le bouton "Voir les produits"
+    cy.contains("button", "Voir les produits").should("be.visible").click();
+
+    // 5. Je suis redirigé vers /#/products
     cy.url().should("include", "/#/products");
 
-    // Attend la réponse de l’API
+    // 6. J’attends que les produits soient chargés
     cy.wait("@getProducts").its("response.statusCode").should("eq", 200);
 
-    // Vérifie que les produits sont bien affichés
+    // 7. Je vérifie qu’au moins un bouton "Consulter" est visible
     cy.get('[data-cy="product-link"]').should("have.length.greaterThan", 0);
 
-    // Clic sur le bouton "Consulter" du premier produit
+    // 8. Je clique sur le bouton "Consulter" du premier produit
     cy.get('[data-cy="product-link"]').first().click();
 
-    // Vérifie qu'on est bien redirigé vers la page du produit
-    cy.url().should("include", "/#/product");
+    // 9. Je suis redirigé vers /#/products/:id
+    cy.url().should("match", /\/#\/products\/\d+/);
+
+    // 10. Je vérifie que le nom et l’image du produit sont affichés
+    cy.get('[data-cy="detail-product-name"]').should("be.visible");
+    cy.get('[data-cy="detail-product-img"]').should("be.visible");
+
+    // 11. Je vérifie que le formulaire (ajouter au panier) est présent
+    cy.get('[data-cy="detail-product-form"]').should("exist");
   });
+
+ 
 });
