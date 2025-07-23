@@ -1,122 +1,137 @@
-// cypress/e2e/cart.cy.js
 describe("Panier – scénarios essentiels", () => {
-  const login = () => {
+  beforeEach(() => {
     cy.visit("/#/login");
     cy.get('[data-cy="login-input-username"]').type("test2@test.fr");
     cy.get('[data-cy="login-input-password"]').type("testtest");
     cy.get('[data-cy="login-submit"]').click();
-  };
+  });
 
-  it("accès aux produits depuis la page d'accueil et navigation vers le détail", () => {
-    // 1. Connexion utilisateur
-    login();
-
-    // 2. Intercepter l'appel à l'API produits
+  it("affiche les produits et navigue vers le détail", () => {
     cy.intercept("GET", "**/products").as("getProducts");
 
-    // 3. Page d’accueil
     cy.url().should("include", "/#/");
-
-    // 4. Je clique sur le bouton "Voir les produits"
     cy.contains("button", "Voir les produits").should("be.visible").click();
 
-    // 5. Redirection vers /#/products
     cy.url().should("include", "/#/products");
-
-    // 6. J’attends que les produits soient chargés
     cy.wait("@getProducts").its("response.statusCode").should("eq", 200);
 
-    // 7. Je vérifie qu’au moins un bouton "Consulter" est visible
-    cy.get('[data-cy="product-link"]').should("have.length.greaterThan", 0);
-
-    // 8. Je clique sur le bouton "Consulter" du premier produit
-    cy.get('[data-cy="product-link"]').first().click();
-
-    // 9. Je suis redirigé vers /#/products/:id
+    cy.get('[data-cy="product-link"]')
+      .should("have.length.greaterThan", 0)
+      .first()
+      .click();
     cy.url().should("match", /\/#\/products\/\d+/);
 
-    // 10. Je vérifie que le nom et l’image du produit sont affichés
     cy.get('[data-cy="detail-product-name"]').should("be.visible");
     cy.get('[data-cy="detail-product-img"]').should("be.visible");
-
-    // 11. Je vérifie que le formulaire est présent
     cy.get('[data-cy="detail-product-form"]').should("exist");
-
-    // 12. Je vérifie que le stock est affiché et supérieur à 1
-    let stockInitial = 0;
 
     cy.get('[data-cy="detail-product-stock"]')
       .should("exist")
       .invoke("text")
       .should("match", /\d+/)
       .then((text) => {
-        stockInitial = parseInt(text.match(/\d+/)[0]);
+        const stockInitial = parseInt(text.match(/\d+/)[0]);
         expect(stockInitial).to.be.greaterThan(1);
       });
 
-    // 13. Je vérifie que le bouton "Ajouter" est activé pour quantité 1
     cy.get('[data-cy="detail-product-quantity"]').clear().type("1").blur();
-    cy.get('[data-cy="detail-product-add"]').should("not.be.disabled");
+    cy.get('[data-cy="detail-product-add"]').should("not.be.disabled").click();
 
-    // 14. Je clique sur le bouton "Ajouter au panier"
-    cy.get('[data-cy="detail-product-add"]').click();
-
-    // 15. Je vais sur la page panier
-    cy.visit("/#/cart");
-
-    // 16. Je vérifie que le produit a bien été ajouté
+    cy.url().should("include", "/#/cart");
     cy.get('[data-cy="cart-line"]').should("have.length.at.least", 1);
-
-    // 17. Retour au produit
-    cy.go("back");
-
-    // 18. Vérifie que le stock a diminué
-    cy.get('[data-cy="detail-product-stock"]')
-      .invoke("text")
-      .should("match", /\d+/)
-      .then((textAfter) => {
-        const stockAfter = parseInt(textAfter.match(/\d+/)[0]);
-        expect(stockAfter).to.equal(stockInitial - 1);
-      });
-
-    // 20. Vérifie présence du champ "disponibilité" (stock affiché)
-    cy.get('[data-cy="detail-product-stock"]')
-      .should("exist")
-      .and("be.visible");
   });
 
-  it("accès aux produits depuis la page d'accueil et navigation vers le détail", () => {
-    // Connexion utilisateur
-    login();
-
-    // Interception de l'API produits
+  it("désactive le bouton pour quantité invalide", () => {
     cy.intercept("GET", "**/products").as("getProducts");
 
-    // Page d'accueil → clic bouton produits
     cy.url().should("include", "/#/");
     cy.contains("button", "Voir les produits").should("be.visible").click();
     cy.url().should("include", "/#/products");
 
-    // Attente des données produits
     cy.wait("@getProducts").its("response.statusCode").should("eq", 200);
-    cy.get('[data-cy="product-link"]').should("have.length.greaterThan", 0);
+    cy.get('[data-cy="product-link"]')
+      .should("have.length.greaterThan", 0)
+      .first()
+      .click();
 
-    // Détail produit
-    cy.get('[data-cy="product-link"]').first().click();
-    cy.url().should("match", /\/#\/products\/\d+/);
     cy.get('[data-cy="detail-product-name"]').should("be.visible");
     cy.get('[data-cy="detail-product-img"]').should("be.visible");
-    cy.get('[data-cy="detail-product-form"]').should("exist");
 
     const inputSelector = '[data-cy="detail-product-quantity"]';
     const buttonSelector = '[data-cy="detail-product-add"]';
 
-    // ➤ Cas invalide : -1 → bouton désactivé
     cy.get(inputSelector).clear().type("-1").blur();
     cy.get(buttonSelector).should("be.disabled");
 
-    // ➤ Cas valide : 1 → bouton activé
     cy.get(inputSelector).clear().type("1").blur();
     cy.get(buttonSelector).should("not.be.disabled");
+  });
+
+  it("valide les limites de quantité (1-20)", () => {
+    cy.intercept("GET", "**/products").as("getProducts");
+
+    cy.contains("button", "Voir les produits").click();
+    cy.wait("@getProducts");
+    cy.get('[data-cy="product-link"]').first().click();
+    cy.url().should("match", /\/#\/products\/\d+$/);
+
+    const inputSelector = '[data-cy="detail-product-quantity"]';
+    const buttonSelector = '[data-cy="detail-product-add"]';
+
+    cy.get(inputSelector).clear().type("20").blur();
+    cy.get(buttonSelector).should("not.be.disabled");
+
+    cy.get(inputSelector).clear().type("21").blur();
+    cy.get(buttonSelector).should("be.disabled");
+  });
+
+  it("ajoute au panier et vérifie le décrément de stock", () => {
+    cy.intercept("GET", "**/products").as("getProducts");
+    cy.intercept("GET", "**/products/*").as("getProduct");
+    cy.intercept("PUT", "**/orders/add").as("addToCart");
+
+    cy.contains("button", "Voir les produits").click();
+    cy.wait("@getProducts");
+
+    cy.get('[data-cy="product-link"]')
+      .filter('[ng-reflect-router-link="/products,10"]')
+      .should("be.visible")
+      .click();
+
+    cy.wait("@getProduct");
+    cy.url().should("match", /\/#\/products\/10$/);
+
+    cy.get('[data-cy="detail-product-stock"]')
+      .should("be.visible")
+      .invoke("text")
+      .should("match", /\d+/)
+      .then((txtBefore) => {
+        const nbBefore = parseInt(txtBefore.match(/\d+/)[0]);
+        expect(nbBefore).to.be.greaterThan(0);
+
+        cy.get('[data-cy="detail-product-quantity"]')
+          .should("be.visible")
+          .clear()
+          .type("1");
+
+        cy.get("#add-to-cart button").should("be.visible").click();
+
+        cy.wait("@addToCart").its("response.statusCode").should("eq", 200);
+        cy.url().should("include", "/#/cart");
+        cy.get('[data-cy="cart-line"]').should("exist");
+
+        // Retour produit
+        cy.visit("http://127.0.0.1:8080/#/products/10");
+        cy.wait("@getProduct");
+
+        cy.get('[data-cy="detail-product-stock"]')
+          .should("be.visible")
+          .invoke("text")
+          .should("match", /\d+/)
+          .then((txtAfter) => {
+            const nbAfter = parseInt(txtAfter.match(/\d+/)[0]);
+            expect(nbAfter, "stock décrémenté").to.equal(nbBefore - 1);
+          });
+      });
   });
 });
