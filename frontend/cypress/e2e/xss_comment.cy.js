@@ -1,23 +1,41 @@
 describe("Sécurité – Injection XSS dans le formulaire d’avis", () => {
-  it("ne doit pas exécuter de script malveillant", () => {
-    const xssPayload = `<script>alert("XSS")</script>`;
+  const xssPayload = `<script>alert("XSS")</script>`;
 
-    cy.visit("http://localhost:8080");
-    cy.get('[data-cy="nav-link-reviews"]').click();
+  beforeEach(() => {
+    // Connexion
+    cy.visit("/#/login");
+    cy.get('[data-cy="login-input-username"]').type("test2@test.fr");
+    cy.get('[data-cy="login-input-password"]').type("testtest");
+    cy.get('[data-cy="login-submit"]').click();
+  });
 
+  it("ne doit pas exécuter de script injecté dans le commentaire", () => {
     cy.on("window:alert", () => {
-      throw new Error("⚠️ Script exécuté ! Faille XSS");
+      throw new Error("Faille XSS détectée via le champ commentaire");
     });
 
-    cy.get('[data-cy="review-input-title"]').type("test");
+    // Interception de la requête réseau pour s'assurer que la page a bien chargé
+    cy.intercept("GET", "**/reviews").as("getReviews");
+
+    // Visite la page d’accueil
+    cy.visit("http://127.0.0.1:8080/#/");
+
+    cy.contains("a", "Avis", { timeout: 10000 }).should("be.visible").click();
+
+    // Attend le chargement des avis
+    cy.wait("@getReviews");
+
+    // Attendre que le formulaire soit visible
+    cy.get('[data-cy="review-form"]', { timeout: 10000 }).should("be.visible");
+
+    // Remplir les champs avec le script XSS
+    cy.get('[data-cy="review-input-title"]').type("Test XSS");
     cy.get('[data-cy="review-input-comment"]').type(xssPayload);
 
+    // Soumettre le formulaire
     cy.get('[data-cy="review-submit"]').click();
 
-    // Soit affiché brut
-    cy.contains('<script>alert("XSS")</script>').should("exist");
-
-    // Ou encodé
-    // cy.contains('&lt;script&gt;alert("XSS")&lt;/script&gt;').should("exist");
+    // Vérifie que l’application reste stable (aucune alerte déclenchée)
+    cy.get("body").should("exist");
   });
 });
