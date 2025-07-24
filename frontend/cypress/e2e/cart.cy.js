@@ -32,7 +32,7 @@ describe("Panier – scénarios essentiels", () => {
     cy.get('[data-cy="detail-product-form"]').should("exist");
 
     let stockInitial = 0;
-
+    //le stock doit être > 1
     cy.get('[data-cy="detail-product-stock"]')
       .should("exist")
       .invoke("text")
