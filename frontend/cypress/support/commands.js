@@ -35,3 +35,17 @@
 //     }
 //   }
 // }
+Cypress.Commands.add("login", () => {
+  cy.visit("/#/login");
+
+  cy.fixture("user").then((user) => {
+    cy.get('[data-cy="login-input-username"]').type(user.email);
+    cy.get('[data-cy="login-input-password"]').type(user.password);
+    cy.get('[data-cy="login-submit"]').click();
+  });
+
+  // Vérifie que l'utilisateur est connecté
+  cy.get('[data-cy="nav-link-logout"]', { timeout: 10000 }).should(
+    "be.visible"
+  );
+});

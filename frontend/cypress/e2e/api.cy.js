@@ -6,8 +6,7 @@ describe("Tests API", () => {
       url: `${baseUrl}/orders`,
       failOnStatusCode: false,
     }).then((response) => {
-      // On attend une erreur si l'utilisateur N'EST PAS connecté
-      expect(response.status).to.eq(401); // devrait être 403 selon les règles métier
+      expect(response.status).to.eq(401);
     });
   });
 
@@ -94,7 +93,7 @@ describe("Tests API", () => {
           Authorization: `Bearer ${token}`,
         },
         body: {
-          product: 3, // utilise un ID produit valide
+          product: 3,
           quantity: 1,
         },
       }).then((response) => {

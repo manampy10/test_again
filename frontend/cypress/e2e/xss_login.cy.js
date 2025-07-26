@@ -14,7 +14,7 @@ describe("Test XSS sur le formulaire de connexion", () => {
     cy.get('[data-cy="login-input-password"]').type("dummy");
     cy.get('[data-cy="login-submit"]').click();
 
-    cy.get("body").should("exist"); // Vérifie simplement que rien ne plante visuellement
+    cy.get("body").should("exist");
   });
 
   it("ne doit pas exécuter de script injecté dans le champ mot de passe", () => {

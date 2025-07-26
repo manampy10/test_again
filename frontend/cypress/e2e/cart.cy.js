@@ -1,14 +1,7 @@
 // cypress/e2e/cart.cy.js
 describe("Panier – scénarios essentiels", () => {
-  const login = () => {
-    cy.visit("/#/login");
-    cy.get('[data-cy="login-input-username"]').type("test2@test.fr");
-    cy.get('[data-cy="login-input-password"]').type("testtest");
-    cy.get('[data-cy="login-submit"]').click();
-  };
-
   it("accès aux produits depuis la page d'accueil et navigation vers le détail", () => {
-    login();
+    cy.login();
 
     cy.intercept("GET", "**/products").as("getProducts");
 
@@ -56,7 +49,7 @@ describe("Panier – scénarios essentiels", () => {
   });
 
   it("désactive le bouton si la quantité saisie est invalide", () => {
-    login();
+    cy.login();
 
     cy.intercept("GET", "**/products").as("getProducts");
 
@@ -81,7 +74,7 @@ describe("Panier – scénarios essentiels", () => {
   });
 
   it("valide les limites de quantité (min, max)", () => {
-    login();
+    cy.login();
 
     cy.intercept("GET", "**/products").as("getProducts");
 
@@ -98,13 +91,13 @@ describe("Panier – scénarios essentiels", () => {
     cy.get(inputSelector).clear().type("20").blur();
     cy.get(buttonSelector).should("not.be.disabled");
 
-    // Cas refusé : 21
+    // Cas refusé : 21 = TEST KO
     cy.get(inputSelector).clear().type("21").blur();
     cy.get(buttonSelector).should("be.disabled");
   });
 
   it("ajout au panier et décrément du stock vérifié", () => {
-    login();
+   cy.login();
 
     cy.intercept("GET", "**/products").as("getProducts");
     cy.intercept("GET", "**/products/*").as("getProduct");
