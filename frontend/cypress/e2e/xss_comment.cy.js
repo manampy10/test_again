@@ -15,7 +15,6 @@ describe("Sécurité XSS – Injection dans le commentaire", () => {
     // Intercepts si besoin
     cy.intercept("GET", "**/products/**").as("getProducts");
 
-    // Connexion utilisateur
     login();
     cy.visit("http://127.0.0.1:8080/#/");
     cy.wait("@getProducts");
@@ -25,10 +24,8 @@ describe("Sécurité XSS – Injection dans le commentaire", () => {
 
     cy.url().should("include", "/reviews");
 
-    // Attente DOM au lieu de @getReviews
     cy.get('[data-cy="review-form"]', { timeout: 10000 }).should("be.visible");
 
-    // Remplir le formulaire
     cy.get('[data-cy="review-input-rating-images"] img')
       .should("have.length", 5)
       .eq(3)
@@ -40,7 +37,6 @@ describe("Sécurité XSS – Injection dans le commentaire", () => {
     );
     cy.get('[data-cy="review-submit"]').click();
 
-    // Attente + reload
     cy.wait(1000);
     cy.reload();
 

@@ -22,6 +22,7 @@ describe("Panier – scénarios essentiels", () => {
 
     cy.get('[data-cy="product-link"]').should("have.length.greaterThan", 0);
 
+    //boutton consulter
     cy.get('[data-cy="product-link"]').first().click();
 
     cy.url().should("match", /\/#\/products\/\d+/);
@@ -43,6 +44,8 @@ describe("Panier – scénarios essentiels", () => {
       });
 
     cy.get('[data-cy="detail-product-quantity"]').clear().type("1").blur();
+
+    //Vérification boutton activé
     cy.get('[data-cy="detail-product-add"]').should("not.be.disabled");
 
     cy.get('[data-cy="detail-product-add"]').click();
@@ -52,7 +55,7 @@ describe("Panier – scénarios essentiels", () => {
     cy.get('[data-cy="cart-line"]').should("have.length.at.least", 1);
   });
 
-  it("accès aux produits depuis la page d'accueil et navigation vers le détail", () => {
+  it("désactive le bouton si la quantité saisie est invalide", () => {
     login();
 
     cy.intercept("GET", "**/products").as("getProducts");
@@ -75,9 +78,6 @@ describe("Panier – scénarios essentiels", () => {
 
     cy.get(inputSelector).clear().type("-1").blur();
     cy.get(buttonSelector).should("be.disabled");
-
-    cy.get(inputSelector).clear().type("1").blur();
-    cy.get(buttonSelector).should("not.be.disabled");
   });
 
   it("valide les limites de quantité (min, max)", () => {
