@@ -28,6 +28,13 @@ git clone https://github.com/OpenClassrooms-Student-Center/Eco-Bliss-Bath-V2.git
 cd Eco-Bliss-Bath-V2
 ```
 
+# Clonez le projet — le dossier cypress est déjà inclus, aucun ajout supplémentaire n’est nécessaire pour les tests.
+
+```
+git clone https://github.com/manampy10/test_again
+cd Eco-Bliss-Bath-V2
+```
+
 Pour démarrer l'API avec ça base de données.
 
 ```
@@ -85,4 +92,10 @@ npx cypress run
 ```
 npm start
 ng serve --host 0.0.0.0 --port 8080 --disable-host-check
+```
+
+```
+ Le baseUrl est défini sur http://127.0.0.1:8080 (et non localhost),
+ car sur Windows, l'utilisation de localhost peut
+ parfois entraîner des problèmes de résolution réseau.
 ```
