@@ -97,7 +97,7 @@ describe("Panier – scénarios essentiels", () => {
   });
 
   it("ajout au panier et décrément du stock vérifié", () => {
-   cy.login();
+    cy.login();
 
     cy.intercept("GET", "**/products").as("getProducts");
     cy.intercept("GET", "**/products/*").as("getProduct");
@@ -117,10 +117,12 @@ describe("Panier – scénarios essentiels", () => {
     cy.get('[data-cy="detail-product-stock"]')
       .should("be.visible")
       .should(($el) => {
+        //vérifie que le contenu text contien au moins un chiffre
         expect($el.text()).to.match(/\d+/);
       })
       .invoke("text")
       .then((txtBefore) => {
+        //utilise match pour extraire le nombre trouvé
         const match = txtBefore.match(/\d+/);
         if (!match) throw new Error("Aucun nombre trouvé dans : " + txtBefore);
         const nbBefore = parseInt(match[0], 10);
